@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-//БД пока не будет тк хз че и как там
+#include <time.h>
+//БД будет но хз че и как там
 //БД поступлений товаров на склад
 //comes:date; 		// Дата поступления
 //sender:string; 	// Грузоотправитель
@@ -10,6 +11,18 @@
 //count:int; 		// Поступило в количестве
 //images:set of ['fragile','toxic','perishable','acrid','inflammable','frozen']		// Значки на коробке
 //worker:string; 	// Принял работник (фамилия)
+
+struct database
+{
+    time_t *comes;
+    char *sender;
+    char *name;
+    int weight;
+    int count;
+    char images[12];
+    char *worker;
+    // struct database *lst; хз на счет этого
+};
 
 
 
