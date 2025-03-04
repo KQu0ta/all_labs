@@ -30,6 +30,7 @@ struct person // Студент
     struct tm birth;        // Крч тут принцип записи в структуру {число, месяц - 1, год -1900} 
     char number_of_group[20];
     struct subject* lesson;
+    size_t number_of_items;
 
 };
 
@@ -38,25 +39,10 @@ int random_int(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
-// Функция для генерации случайной даты рождения
-// struct tm random_date() {
-//     int month = random_int(1, 12);
-//     int day = 0;
-//     if (month == 28){
-//         person.birth. = random_int(1, 28);
-//     }else if (month == 4 || month == 6 || month == 9 || month == 11 ){
-//         int day = random_int(1, 30); 
-//     }else{
-//         int day = random_int(1, 31); 
-//     }
-//     int year = random_int(1990, 2005); // Год
-//     return 
-//     // sprintf(date, "%02d.%02d.%04d", day, month, year); // Формат: ДД.ММ.ГГГГ
-// }
 
 // Функция для генерации случайного ФИО
 void random_fio(char *fio) {
-    const char *names[] = { "Никита", "Лев", "Виталий" };
+    const char *names[] = { "Никита", "Лев", "Виталий", "Раджаб", "Юрий", "Мухамед", "Алексей", "Андрей", "Александр" };
     const char *surnames[] = { "Клыгин", "Попов", "Гужавин" };
     const char *lastnames[] = { "Александрович", "Алексеевич", "Сергеевич" };
 
@@ -85,35 +71,28 @@ void random_group(char group[20]){
         
     }
     
-
-    // snprintf(group[18], 2, "%d", random_int(10,99));
-    // // group[18] = random_int(10,99);    
 }
 
 // Функция для генерации случайного предмета
-void random_lesson(struct subject * lesson, int min_disciplines, int max_disciplines) {
-    // const char *lessons_names[] = { "Рыганье", "Пуканье", "Сраканье" };
+void random_lesson(struct subject* lesson, size_t n) {
+    const char *lessons_names[] = { "Выш.мат", "Физика", "Аип" , "Англ.яз", "Физ.культ", "Философия", "Впд"};
 
-    if(min_disciplines == 0 && max_disciplines == 0){
-        min_disciplines = 10, max_disciplines = 20;
-    }
     
-    size_t count_of_lessons = (size_t)random_int(min_disciplines , max_disciplines);
-    lesson = (struct subject*)calloc(count_of_lessons, sizeof(struct subject));// прикольная строка я вроде понял, вроде не понял
+    // lesson = (struct subject*)calloc(n, sizeof(struct subject));// прикольная строка я вроде понял, вроде не понял
     
-    for (size_t i = 0; i < count_of_lessons; i++)
+    for (size_t i = 0; i < n; i++)
     {
-        // student->lesson[i].name_of_subject = lessons_names[random_int(0,2)]; Фикс не знаю почему
+        strncpy(lesson[i].name_of_subject, lessons_names[random_int(0,2)], 21);
+        lesson[i].name_of_subject[21] = '\0';
         lesson[i].number_of_lectures = (unsigned char)random_int(0,255);
         lesson[i].number_of_laboratory = (unsigned char)random_int(0,255);
         lesson[i].lesson_sum = (unsigned char)random_int(0,255);
         lesson[i].status = random_int(0,2);
     }
-   
 }
 
 
-void generation(size_t n, struct person* arr){
+void generation(size_t n, struct person* arr, int min_disciplines, int max_disciplines){
     for (size_t i = 0; i < n; i++)
     {
         random_fio(arr[i].fullname);
@@ -131,7 +110,16 @@ void generation(size_t n, struct person* arr){
         arr[i].birth.tm_year = random_int(85, 110); //-1900 тк time
 
         random_group(arr[i].number_of_group);
-        random_lesson(arr[i].lesson, 0, 0);
+        arr[i].number_of_items = (size_t)random_int(min_disciplines, max_disciplines);
+
+        arr[i].lesson = (struct subject*)calloc(arr[i].number_of_items, sizeof(struct subject));
+        if (arr[i].lesson == NULL) {
+            printf("Ошибка выделения памяти для предметов.\n");
+            return;
+        }
+
+
+        random_lesson(arr[i].lesson, arr[i].number_of_items);
     }
     
 }
@@ -149,20 +137,30 @@ void get_size(size_t n){
         index_size++;
     }
 
-    printf("Data size %lld %s", total_mem, format[index_size]);
+    printf("Data size %zu %s\n", total_mem, format[index_size]);
 }
 
 
 
 //Работает коректно
 void print_students(size_t n, struct person *students, size_t max_count){
-    if (n < 1){printf("N не может быть меньше 1");}
+    if (n < 1){
+        printf("N не может быть меньше 1");
+        return;
+    }
     if (n == 1){n = max_count;}
 
     for (size_t i = 0; i < n; i++){
-        printf("%lld %s %02d.%02d.%04d %s\n", i+1, students[i].fullname, students[i].birth.tm_mday, students[i].birth.tm_mon+1, students[i].birth.tm_year+1900,students[i].number_of_group);
+        printf("%zu %s %02d.%02d.%04d %s\n", i+1, students[i].fullname, students[i].birth.tm_mday, students[i].birth.tm_mon+1, students[i].birth.tm_year+1900,students[i].number_of_group);
     }
 
+}
+
+void print_lesson(struct person student){
+    printf("%s\n", student.fullname);
+    for (size_t i = 0; i < student.number_of_items; i++){
+        printf("%zu %s %u %u %u %d\n", i+1, student.lesson[i].name_of_subject, student.lesson[i].number_of_lectures, student.lesson[i].number_of_laboratory, student.lesson[i].lesson_sum ,student.lesson[i].status);
+    }
 }
 
 void clean_data(struct person* student, size_t *n){
@@ -183,18 +181,19 @@ void clean_data(struct person* student, size_t *n){
 
 void print_menu() {
     printf("\x1b[2J\x1b[H");// Очистка экрана
-    printf("+----------------------------------------------+\n\n");
+    printf("+----------------------------------------------+\n");
     printf("|                МЕНЮ ПРОГРАММЫ                |\n");
     printf("+----------------------------------------------+\n");
     printf("|       1. gen N - Генерация данных            |\n");
     printf("|       2. get_size - Размер данны             |\n");
     printf("|       3. print_students N (default - all)    |\n");
-    printf("|       4. clean - Очистка данных              |\n");
-    printf("|       5. exit - Выход                        |\n");
+    printf("|       4. lesson N (N - number_of_student)    |\n");
+    printf("|       5. clean - Очистка данных              |\n");
+    printf("|       6. exit - Выход                        |\n");
     printf("+----------------------------------------------+\n");
 
 
-    printf("Command:");
+    printf("Command:\n");
 }
 
 
@@ -222,7 +221,7 @@ int main(){
             if (arg != NULL) {
                 n = (size_t)strtol(arg, NULL, 10);
                 student = (struct person*)calloc(n, sizeof(struct person));
-                generation(n, student);
+                generation(n, student, 10, 20);
                 printf("Данные сгенерированы.\n");
             } else {
                 printf("Неверный аргумент для команды gen.\n");
@@ -235,7 +234,11 @@ int main(){
             char* arg = strtok(NULL, " ");
             print_students((size_t)strtol(arg, NULL, 10), student, n);
 
-        } else if (strcmp(token, "clean") == 0) { // Очистка данных
+        } else if (strcmp(token, "lesson") == 0) { // Печать студентов
+            char* arg = strtok(NULL, " ");
+            print_lesson(student[(size_t)strtol(arg, NULL, 10)-1]);
+        
+        }else if (strcmp(token, "clean") == 0) { // Очистка данных
             clean_data(student, &n);
             student = NULL; 
 
