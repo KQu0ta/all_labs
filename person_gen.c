@@ -5,6 +5,30 @@
 #include <string.h>
 #include <windows.h>
 
+enum SubjectID{
+    math,
+    physics,
+    programming,
+    english,
+    phys_educ,
+    philos,
+    vpd,
+    tcp,
+    oib,
+
+};
+
+const char* subject_names[] = {
+    [math] = "Выш.мат",
+    [physics] = "Физика",
+    [programming] = "Аип",
+    [english] = "Англ.яз",
+    [phys_educ] = "Физ.культ",
+    [philos] = "Философия",
+    [vpd] = "Введ в проф.деят",
+    [tcp] = "Тех.цифр.промыш",
+    [oib] = "Основ.инфобеза",
+};
 
 typedef enum { // Формат аттестации
     exam,           // Экзамен 0
@@ -15,7 +39,7 @@ typedef enum { // Формат аттестации
 
 struct subject  // Предмет
 {
-    char name_of_subject[30];               
+    unsigned int name_of_subject:4;               
     unsigned int number_of_lectures:8;      
     unsigned int number_of_laboratory:8;    
     unsigned int lesson_sum:8;              
@@ -25,7 +49,7 @@ struct subject  // Предмет
 struct date{
     unsigned int day:5;
     unsigned int month:4;
-    unsigned int year:7;
+    unsigned int year:8;
 };
 
 struct person // Студент
@@ -58,7 +82,6 @@ void random_fio(char *fio) {
 void random_group(char* number_of_group){
     //5151004/40002
     char group[20] = "Group_";
-    char str[1];
     for (size_t i = 6; i < 20; i++){
         if (i == 13){group[i] = '/';}
         else{
@@ -71,12 +94,9 @@ void random_group(char* number_of_group){
 
 // Функция для генерации случайного предмета
 void random_lesson(struct subject* lesson, size_t n) {
-    const char *lessons_names[] = { "Выш.мат", "Физика", "Аип" , "Англ.яз", "Физ.культ", "Философия", "Впд"};
-    
     for (size_t i = 0; i < n; i++)
     {
-        strncpy(lesson[i].name_of_subject, lessons_names[random_int(0,2)], 21);
-        lesson[i].name_of_subject[21] = '\0';
+        lesson[i].name_of_subject = (unsigned char)random_int(0,9);
         lesson[i].number_of_lectures = (unsigned char)random_int(0,255);
         lesson[i].number_of_laboratory = (unsigned char)random_int(0,255);
         lesson[i].lesson_sum = (unsigned char)random_int(0,255);
@@ -86,21 +106,19 @@ void random_lesson(struct subject* lesson, size_t n) {
 
 
 void generation(size_t n, struct person* arr, int min_disciplines, int max_disciplines){
-    for (size_t i = 0; i < n; i++)
-    {
+    for (size_t i = 0; i < n; i++){
         random_fio(arr[i].fullname);
-        arr[i].birth.month = random_int(1,12);
-        
+        arr[i].birth.month = (unsigned char)random_int(1,12);
         if (arr[i].birth.month == 2){
-            arr[i].birth.day = random_int(1, 28);
+            arr[i].birth.day = (unsigned char)random_int(1, 28);
 
         }else if (arr[i].birth.month == 4 || arr[i].birth.month == 6 || arr[i].birth.month == 9 || arr[i].birth.month == 11 ){
-            arr[i].birth.day = random_int(1, 30); 
+            arr[i].birth.day = (unsigned char)random_int(1, 30); 
 
         }else{
-            arr[i].birth.day = random_int(1, 31); 
+            arr[i].birth.day = (unsigned char)random_int(1, 31); 
         }
-        arr[i].birth.year = random_int(85, 110); //-1900 тк time
+        arr[i].birth.year = (unsigned char)random_int(85, 110); //-1900 тк time
 
         random_group(arr[i].number_of_group);
         arr[i].number_of_items = (size_t)random_int(min_disciplines, max_disciplines);
@@ -123,6 +141,7 @@ void generation(size_t n, struct person* arr, int min_disciplines, int max_disci
 //Работает коректно
 void get_size(size_t n){
     size_t total_mem = sizeof(struct person) * n;
+    printf("Data size %zu\n B", total_mem);
     char format[][3] = {"B", "Kb", "Mb", "Gb"};
     short index_size = 0;
     while (total_mem >= 1024 && index_size < 4) {
@@ -151,8 +170,9 @@ void print_students(size_t n, struct person *students, size_t max_count){
 
 void print_lesson(struct person student){
     printf("%s\n", student.fullname);
+    printf("Название | Ауд.Лекция | Ауд.Лаб  | Сум.час | Аттестация\n");
     for (size_t i = 0; i < student.number_of_items; i++){
-        printf("%zu %s %u %u %u %d\n", i+1, student.lesson[i].name_of_subject, student.lesson[i].number_of_lectures, student.lesson[i].number_of_laboratory, student.lesson[i].lesson_sum ,student.lesson[i].status);
+        printf("%zu %s %u %u %u %d\n", i+1, subject_names[student.lesson[i].name_of_subject], student.lesson[i].number_of_lectures, student.lesson[i].number_of_laboratory, student.lesson[i].lesson_sum ,student.lesson[i].status);
     }
 }
 
@@ -186,7 +206,7 @@ void print_menu() {
     printf("+----------------------------------------------+\n");
 
 
-    printf("Command:\n");
+    printf("Введите команду:\n");
 }
 
 
@@ -201,13 +221,11 @@ int main(){
     while (d) {
         
         fgets(command, sizeof(command), stdin);
-
-        // Удаляем символ новой строки
         command[strcspn(command, "\n")] = '\0';
 
-        // Разделяем команду и аргументы
-        char* token = strtok(command, " ");
-        if (token == NULL) continue; // Пропустить пустой ввод
+
+        char* token = strtok(command, " ");// Разделяем команду и аргументы
+        if (token == NULL){continue;} // Пропустить пустой ввод
 
         if (strcmp(token, "gen") == 0) { // Генерация данных
             char* arg = strtok(NULL, " ");
