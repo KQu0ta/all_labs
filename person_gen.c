@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include <string.h>
-
 #include <windows.h>
 
 
@@ -23,11 +22,16 @@ struct subject  // Предмет
     attestation status;
 };
 
+struct date{
+    unsigned int day:5;
+    unsigned int month:4;
+    unsigned int year:7;
+};
 
 struct person // Студент
 {
     char fullname[100];
-    struct tm birth;        // Крч тут принцип записи в структуру {число, месяц - 1, год -1900} 
+    struct date birth;        // Крч тут принцип записи в структуру {число, месяц, год -1900} 
     char number_of_group[20];
     struct subject* lesson;
     size_t number_of_items;
@@ -51,34 +55,23 @@ void random_fio(char *fio) {
 }
 
 // Функция для генерации случайной группы
-void random_group(char group[20]){
-    
-    group[0] = (char)random_int(65,90);
-    for (int i = 1; i < 20; i++)
-    {
-        if (i ==17){
-            group[17] = '_';
-        }
-        else if (i>17){
-            group[i] = (char)random_int(10,99);
-        }
+void random_group(char* number_of_group){
+    //5151004/40002
+    char group[20] = "Group_";
+    char str[1];
+    for (size_t i = 6; i < 20; i++){
+        if (i == 13){group[i] = '/';}
         else{
-            group[i] = (char)random_int(65, 90);
-        }
-
-        
-        
-        
+            group[i] = '0' + random_int(0, 9);
+        } 
     }
-    
+    group[20] = '\0';
+    strncpy(number_of_group, group, 20);
 }
 
 // Функция для генерации случайного предмета
 void random_lesson(struct subject* lesson, size_t n) {
     const char *lessons_names[] = { "Выш.мат", "Физика", "Аип" , "Англ.яз", "Физ.культ", "Философия", "Впд"};
-
-    
-    // lesson = (struct subject*)calloc(n, sizeof(struct subject));// прикольная строка я вроде понял, вроде не понял
     
     for (size_t i = 0; i < n; i++)
     {
@@ -96,18 +89,18 @@ void generation(size_t n, struct person* arr, int min_disciplines, int max_disci
     for (size_t i = 0; i < n; i++)
     {
         random_fio(arr[i].fullname);
-        arr[i].birth.tm_mon = random_int(2, 13);// -1 тк time
+        arr[i].birth.month = random_int(1,12);
         
-        if (arr[i].birth.tm_mon == 2){
-            arr[i].birth.tm_mday = random_int(1, 28);
+        if (arr[i].birth.month == 2){
+            arr[i].birth.day = random_int(1, 28);
 
-        }else if (arr[i].birth.tm_mon == 4 || arr[i].birth.tm_mon == 6 || arr[i].birth.tm_mon == 9 || arr[i].birth.tm_mon == 11 ){
-            arr[i].birth.tm_mday = random_int(1, 30); 
+        }else if (arr[i].birth.month == 4 || arr[i].birth.month == 6 || arr[i].birth.month == 9 || arr[i].birth.month == 11 ){
+            arr[i].birth.day = random_int(1, 30); 
 
         }else{
-            arr[i].birth.tm_mday = random_int(1, 31); 
+            arr[i].birth.day = random_int(1, 31); 
         }
-        arr[i].birth.tm_year = random_int(85, 110); //-1900 тк time
+        arr[i].birth.year = random_int(85, 110); //-1900 тк time
 
         random_group(arr[i].number_of_group);
         arr[i].number_of_items = (size_t)random_int(min_disciplines, max_disciplines);
@@ -151,7 +144,7 @@ void print_students(size_t n, struct person *students, size_t max_count){
     if (n == 1){n = max_count;}
 
     for (size_t i = 0; i < n; i++){
-        printf("%zu %s %02d.%02d.%04d %s\n", i+1, students[i].fullname, students[i].birth.tm_mday, students[i].birth.tm_mon+1, students[i].birth.tm_year+1900,students[i].number_of_group);
+        printf("%zu %s %02d.%02d.%04d %s\n", i+1, students[i].fullname, students[i].birth.day, students[i].birth.month, students[i].birth.year+1900,students[i].number_of_group);
     }
 
 }
